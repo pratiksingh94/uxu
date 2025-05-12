@@ -105,6 +105,7 @@ check_data_file() {
 }
 
 
+# ========== HELP COMMAND ==========
 if [[ "$1" == "help" ]]; then
   case "$2" in
     "help")
@@ -125,6 +126,7 @@ if [[ "$1" == "help" ]]; then
 fi
 
 
+# ========== UPLOAD COMMAND ==========
 if [[ "$1" == "upload" ]]; then
   shift
 
@@ -277,4 +279,24 @@ if [[ "$1" == "upload" ]]; then
   echo "URL: $upload_url"
   echo "Token has been stored in ~/.uxu_upload_data.jsonl"
 
+fi
+
+# ========== LIST COMMAND ==========
+if [[ "$1" == "list" ]]; then
+  if [[ ! -e "$DATAFILE" ]]; then
+    echo "Data file doesnt exist. Upload something to create data file."
+    exit 1
+  fi
+  if [[ ! -f "$DATAFILE" || ! -r "$DATAFILE" || ! -w "$DATAFILE" ]]; then
+    echo "Error: cannot access data file; please make sure it’s a readable and writable file."
+    echo "Or delete it from \$HOME to create a new data file upon upload."
+    exit 1
+  fi
+
+  printf "%-25s  %-30s  %-6s  %s\n\n" "TIMESTAMP" "FILENAME" "EXPIRY" "TOKEN" 
+  jq -r '
+    . | [ .timestamp, .file_name, (.expiry|tostring), .token ]
+    | @tsv
+  ' "$DATAFILE" \
+  | column -t -s $'\t'
 fi
